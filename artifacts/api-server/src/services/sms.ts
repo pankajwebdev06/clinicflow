@@ -1,65 +1,68 @@
+import twilio from "twilio";
+
 interface SmsResult {
   success: boolean;
   message: string;
   error?: string;
 }
 
-async function callFast2Sms(mobile: string, otp: string): Promise<SmsResult> {
-  const apiKey = process.env.FAST2SMS_API_KEY;
-  if (!apiKey) {
-    return { success: false, message: "API key not configured", error: "NO_KEY" };
-  }
-
-  const text = `Your ClinicFlow OTP is ${otp}. Valid for 10 minutes. Do not share.`;
-
-  const url = new URL("https://www.fast2sms.com/dev/bulkV2");
-  url.searchParams.set("authorization", apiKey);
-  url.searchParams.set("route", "q");
-  url.searchParams.set("numbers", mobile);
-  url.searchParams.set("message", text);
-  url.searchParams.set("language", "english");
-  url.searchParams.set("flash", "0");
-
-  const res = await fetch(url.toString(), { method: "GET" });
-  const json = (await res.json()) as any;
-
-  if (json.return === true) {
-    return { success: true, message: "OTP sent" };
-  }
-
-  return {
-    success: false,
-    message: Array.isArray(json.message) ? json.message[0] : (json.message ?? "SMS failed"),
-    error: String(json.status_code ?? "UNKNOWN"),
-  };
+function getClient() {
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  if (!sid || !token) return null;
+  return twilio(sid, token);
 }
 
 export async function sendSms(mobile: string, otp: string): Promise<SmsResult> {
+  const client = getClient();
+  const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+
+  if (!client || !fromNumber) {
+    console.warn("[SMS] Twilio credentials not set — OTP not sent. Dev OTP:", otp);
+    return { success: false, message: "SMS credentials not configured", error: "NO_CREDS" };
+  }
+
   try {
-    const result = await callFast2Sms(mobile, otp);
-    if (result.success) {
-      console.info("[SMS] Sent to", mobile);
-    } else {
-      console.error("[SMS] Delivery failed:", result.message, "| error code:", result.error);
-    }
-    return result;
-  } catch (err) {
-    console.error("[SMS] Request error:", err);
-    return { success: false, message: "SMS service unavailable", error: "NETWORK" };
+    await client.messages.create({
+      body: `Your ClinicFlow OTP is: ${otp}. Valid for 10 minutes. Do not share this code.`,
+      from: fromNumber,
+      to: `+91${mobile}`,
+    });
+    console.info("[SMS] OTP sent successfully to +91" + mobile);
+    return { success: true, message: "OTP sent via SMS" };
+  } catch (err: any) {
+    console.error("[SMS] Twilio error:", err.message, "code:", err.code);
+    return {
+      success: false,
+      message: err.message ?? "SMS delivery failed",
+      error: String(err.code ?? "TWILIO_ERR"),
+    };
   }
 }
 
 export async function sendWhatsApp(mobile: string, otp: string): Promise<SmsResult> {
+  const client = getClient();
+  const whatsappFrom = process.env.TWILIO_WHATSAPP_FROM ?? "whatsapp:+14155238886";
+
+  if (!client) {
+    console.warn("[WhatsApp] Twilio credentials not set — OTP not sent. Dev OTP:", otp);
+    return { success: false, message: "WhatsApp credentials not configured", error: "NO_CREDS" };
+  }
+
   try {
-    const result = await callFast2Sms(mobile, otp);
-    if (result.success) {
-      console.info("[WhatsApp→SMS] Sent to", mobile);
-    } else {
-      console.error("[WhatsApp→SMS] Delivery failed:", result.message, "| error code:", result.error);
-    }
-    return result;
-  } catch (err) {
-    console.error("[WhatsApp→SMS] Request error:", err);
-    return { success: false, message: "WhatsApp SMS service unavailable", error: "NETWORK" };
+    await client.messages.create({
+      body: `Your *ClinicFlow* OTP is: *${otp}*\n\nValid for 10 minutes. Do not share this code.`,
+      from: whatsappFrom,
+      to: `whatsapp:+91${mobile}`,
+    });
+    console.info("[WhatsApp] OTP sent successfully to +91" + mobile);
+    return { success: true, message: "OTP sent via WhatsApp" };
+  } catch (err: any) {
+    console.error("[WhatsApp] Twilio error:", err.message, "code:", err.code);
+    return {
+      success: false,
+      message: err.message ?? "WhatsApp delivery failed",
+      error: String(err.code ?? "TWILIO_ERR"),
+    };
   }
 }
