@@ -1,0 +1,397 @@
+## 2. 👨‍⚕️ DOCTOR DASHBOARD COMPONENT
+
+---
+
+### A). MAIN PURPOSE
+
+The Doctor Dashboard must help the doctor:
+
+* See the current patient instantly
+* Check previous visit quickly
+* Spend minimum time in software
+* Move to next patient with one tap
+* Keep the workflow faster than paper
+
+---
+
+### B). DESIGN PRINCIPLE
+
+Doctor should never feel:
+
+❌ software is slowing him down
+
+Doctor should feel:
+
+✅ software saves time
+
+---
+
+### C). DASHBOARD STRUCTURE
+
+Doctor dashboard has only **2 main sections**
+
+---
+
+## SECTION 1 → CURRENT PATIENT SCREEN
+
+This is the default screen after login.
+
+---
+
+### UI LAYOUT
+
+Top Area:
+
+* Current Token Number
+* Queue Position
+* Online / Offline Status
+
+Middle Area:
+
+* Patient Name
+* Age
+* Gender (optional)
+* UPID
+* Mobile Number
+* Today's Symptoms
+* Basic Vitals (if available)
+
+  * BP
+  * Weight
+  * Temperature
+
+Lower Area:
+
+* Last Visit Summary
+* Prescription thumbnail (if previous image available)
+
+Bottom:
+Only 3 main buttons
+
+* ✅ DONE
+* ⏭ NEXT
+* ❌ CANCEL
+
+---
+
+### D). BUTTON LOGIC
+
+---
+
+## 1. ✅ DONE BUTTON
+
+### When doctor clicks DONE:
+
+System should:
+
+* Mark patient status = Completed
+* Save consultation timestamp
+* Move token to completed
+* Notify reception dashboard
+* Load next waiting patient automatically
+
+---
+
+### Speed Requirement
+
+* Response time: < 0.5 seconds
+* No popup confirmation
+* Auto save in background
+
+---
+
+---
+
+## 2. ⏭ NEXT BUTTON
+
+### When doctor clicks NEXT:
+
+System should:
+
+* Keep current patient in waiting
+* Move patient to next position
+* Load next patient instantly
+* Notify reception: next patient required
+
+---
+
+### Use Case
+
+Doctor may click NEXT when:
+
+* Patient absent
+* Need file later
+* Temporary delay
+
+---
+
+### Speed Requirement
+
+* Instant transition
+* No page reload
+
+---
+
+---
+
+## 3. ❌ CANCEL BUTTON
+
+### When doctor clicks CANCEL:
+
+System should:
+
+* Mark visit = cancelled
+* Remove from active queue
+* Load next patient
+* Sync to reception dashboard
+
+---
+
+### Safety
+
+Show mini popup:
+
+“Cancel this patient?”
+
+Buttons:
+
+* Yes
+* No
+
+---
+
+---
+
+### E). EXTRA QUICK ACTIONS
+
+Small secondary buttons
+
+---
+
+#### Button → “View History”
+
+Opens patient history popup
+
+Shows:
+
+* Last 3 visits
+* Old prescription images
+* Previous symptoms
+* Dates
+
+---
+
+#### Button → “Expand Details”
+
+Shows:
+
+* Full profile
+* Full visit history
+
+---
+
+---
+
+### F). SECTION 2 → DAILY SUMMARY TAB
+
+Doctor can switch to second tab
+
+---
+
+### Summary Shows
+
+* Total patients today
+* Completed patients
+* Waiting patients
+* Cancelled patients
+* Average consultation time
+* Returning patients
+* New patients
+
+---
+
+### Purpose
+
+Doctor can see clinic flow quickly
+
+---
+
+---
+
+### G). SPEED OPTIMIZATION
+
+Very important
+
+---
+
+## Must optimize for:
+
+### 1. Preload next patient
+
+While current patient open:
+
+* system silently loads next patient data
+
+Result:
+
+* instant next button response
+
+---
+
+### 2. Cache recent history
+
+Store:
+
+* last 20 patients locally
+
+Result:
+
+* no loading delay
+
+---
+
+### 3. No full refresh
+
+Only update:
+
+* patient card
+* token status
+
+Never refresh entire page
+
+---
+
+### 4. Auto save background
+
+When doctor clicks:
+
+* data saves silently
+
+No manual save needed
+
+---
+
+### 5. Works on slow internet
+
+System must function:
+
+* on 2G / slow internet
+* with local cache
+
+---
+
+---
+
+### H). OFFLINE LOGIC
+
+If internet fails:
+
+System should:
+
+* continue showing queue
+* continue button actions
+* save locally
+* sync later automatically
+
+Doctor should not notice interruption
+
+---
+
+---
+
+### I). MOBILE UI REQUIREMENTS
+
+Dashboard must work smoothly on:
+
+* Android phone
+* iPhone
+* Tablet
+
+---
+
+### UI Rules
+
+* Large buttons
+* Thumb friendly
+* Minimal text
+* No clutter
+* One screen operation
+
+---
+
+---
+
+### J). DATA FLOW
+
+---
+
+### Data Received from Server
+
+Doctor receives:
+
+* current token
+* patient info
+* symptoms
+* vitals
+* last visit summary
+
+---
+
+### Data Sent to Server
+
+Doctor sends:
+
+* status update
+* timestamp
+* next action
+* cancellation
+
+---
+
+---
+
+### K). ERROR HANDLING
+
+If problem occurs:
+
+---
+
+#### If queue empty
+
+Show:
+“No patients waiting”
+
+---
+
+#### If sync failed
+
+Show:
+“Working offline – sync later”
+
+---
+
+#### If duplicate action
+
+Prevent:
+double button tap
+
+---
+
+---
+
+### L). FINAL EXPERIENCE GOAL
+
+Doctor workflow:
+
+Open app
+See patient
+Examine physically
+Tap one button
+Next patient loaded
+
+Target time inside app:
+< 5 seconds per patient
+
+---
+
+END OF COMPONENT
