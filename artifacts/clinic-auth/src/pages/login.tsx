@@ -102,7 +102,7 @@ export default function Login() {
       { data: { mobile, otp: values.otp } },
       {
         onSuccess: (data) => {
-          setToken(data.token);
+          setToken(data.token, data.clinic?.id ?? null);
           let redirectPath = "/";
           if (data.redirectTo === "doctor_dashboard") redirectPath = "/doctor";
           else if (data.redirectTo === "reception_dashboard") redirectPath = "/reception";

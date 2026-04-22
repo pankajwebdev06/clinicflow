@@ -107,7 +107,7 @@ export default function Register() {
       { data: { ...info, email: info.email || null, otp: values.otp } },
       {
         onSuccess: (data) => {
-          setToken(data.token);
+          setToken(data.token, data.clinic.id);
           setRegisteredClinicId(data.clinic.id);
           setClinicCode(data.clinicCode);
           setStep(3);

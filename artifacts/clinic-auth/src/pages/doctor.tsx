@@ -5,12 +5,16 @@ import {
   HeartPulse, CheckCircle2, SkipForward, XCircle, Clock, Users, UserCheck,
   Activity, Thermometer, Weight, Phone, User, CalendarDays, Hash, ChevronRight,
   History, Maximize2, WifiOff, Wifi, LogOut, TrendingUp, BarChart3, RefreshCw,
+  Settings, AlertTriangle,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import { SettingsPanel } from "./settings-panel";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -106,12 +110,13 @@ function HistoryModal({ patientId, patientName, token, open, onClose }: { patien
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto">
+      <DialogContent className="max-w-md mx-4">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <History className="w-5 h-5 text-primary" />
             {patientName} — Visit History
           </DialogTitle>
+          <DialogDescription>Last 5 recorded visits for this patient</DialogDescription>
         </DialogHeader>
         {isLoading && <div className="py-8 text-center text-muted-foreground text-sm">Loading history…</div>}
         {!isLoading && (!data?.history?.length) && (
@@ -177,8 +182,69 @@ function SummaryTab({ summary }: { summary: DashboardData["summary"] }) {
   );
 }
 
+function LogoutButton({ onConfirm }: { onConfirm: () => void }) {
+  const [showConfirm, setShowConfirm] = useState(false);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = () => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    setShowConfirm(true);
+  };
+
+  const handleMouseLeave = () => {
+    hideTimer.current = setTimeout(() => setShowConfirm(false), 400);
+  };
+
+  useEffect(() => () => { if (hideTimer.current) clearTimeout(hideTimer.current); }, []);
+
+  return (
+    <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+      <button className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors text-muted-foreground">
+        <LogOut className="w-4 h-4" />
+      </button>
+
+      <AnimatePresence>
+        {showConfirm && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className="absolute top-10 right-0 z-50 bg-card border shadow-xl rounded-2xl p-4 w-52"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 bg-red-100 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+              </div>
+              <p className="text-sm font-semibold text-foreground">Logout?</p>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">You'll need to login again with OTP.</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 py-1.5 rounded-lg border text-xs font-medium hover:bg-muted transition-colors"
+              >
+                No
+              </button>
+              <button
+                onClick={onConfirm}
+                className="flex-1 py-1.5 rounded-lg bg-red-600 text-white text-xs font-medium hover:bg-red-700 transition-colors"
+              >
+                Yes, logout
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function DoctorDashboard() {
   const token = useAuthStore((s) => s.token);
+  const storedClinicId = useAuthStore((s) => s.clinicId);
   const clearToken = useAuthStore((s) => s.clearToken);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -186,6 +252,7 @@ export default function DoctorDashboard() {
   const [tab, setTab] = useState<"patient" | "summary">("patient");
   const [showCancel, setShowCancel] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [actionLock, setActionLock] = useState(false);
   const prevPatientId = useRef<number | null>(null);
@@ -250,14 +317,18 @@ export default function DoctorDashboard() {
             <p className="text-[10px] text-muted-foreground mt-0.5">Doctor Dashboard</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <span className={`flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full ${isOnline ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
             {isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
             {isOnline ? "Online" : "Offline"}
           </span>
-          <button onClick={handleLogout} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors">
-            <LogOut className="w-4 h-4 text-muted-foreground" />
+          <button
+            onClick={() => setShowSettings(true)}
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground"
+          >
+            <Settings className="w-4 h-4" />
           </button>
+          <LogoutButton onConfirm={handleLogout} />
         </div>
       </div>
 
@@ -532,6 +603,14 @@ export default function DoctorDashboard() {
           onClose={() => setShowHistory(false)}
         />
       )}
+
+      {/* Settings Panel */}
+      <SettingsPanel
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        token={token!}
+        clinicId={storedClinicId ?? 1}
+      />
     </div>
   );
 }
