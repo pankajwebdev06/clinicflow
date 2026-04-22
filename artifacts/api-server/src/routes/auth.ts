@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, and, gt } from "drizzle-orm";
 import { db, usersTable, otpTable, clinicsTable } from "@workspace/db";
 import { SendOtpBody, VerifyOtpBody } from "@workspace/api-zod";
+import { sendSms, sendWhatsApp } from "../services/sms.js";
 
 const router: IRouter = Router();
 
@@ -17,6 +18,7 @@ router.post("/auth/send-otp", async (req, res): Promise<void> => {
   }
 
   const { mobile, purpose } = parsed.data;
+  const channel = (req.body.channel as string) === "whatsapp" ? "whatsapp" : "sms";
 
   if (!/^\d{10}$/.test(mobile)) {
     res.status(400).json({ error: "Mobile number must be exactly 10 digits" });
@@ -37,26 +39,31 @@ router.post("/auth/send-otp", async (req, res): Promise<void> => {
   }
 
   const otp = generateOtp();
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-  await db.insert(otpTable).values({
-    mobile,
-    otp,
-    purpose,
-    expiresAt,
-    used: false,
-  });
+  await db.insert(otpTable).values({ mobile, otp, purpose, expiresAt, used: false });
 
-  const channel = (req.body.channel as string) || "sms";
-  req.log.info({ mobile, purpose, channel }, "OTP generated");
-  req.log.info({ otp }, "DEV OTP");
+  req.log.info({ mobile, purpose, channel, otp }, "OTP generated");
 
-  let channelLabel = channel === "whatsapp" ? "WhatsApp" : "SMS";
+  const channelLabel = channel === "whatsapp" ? "WhatsApp" : "SMS";
+  let deliverySuccess = false;
+
+  if (channel === "whatsapp") {
+    const result = await sendWhatsApp(mobile, otp);
+    deliverySuccess = result.success;
+  } else {
+    const result = await sendSms(mobile, otp);
+    deliverySuccess = result.success;
+  }
 
   res.json({
-    message: `OTP sent to ${mobile} via ${channelLabel}. (Dev code: ${otp})`,
+    message: deliverySuccess
+      ? `OTP sent to ${mobile} via ${channelLabel}.`
+      : `OTP ready for ${mobile}. (Dev mode — no ${channelLabel} key configured)`,
     otp,
-    expiresInSeconds: 300,
+    delivered: deliverySuccess,
+    channel: channelLabel,
+    expiresInSeconds: 600,
   });
 });
 
@@ -83,14 +90,11 @@ router.post("/auth/verify-otp", async (req, res): Promise<void> => {
     .limit(1);
 
   if (validOtp.length === 0) {
-    res.status(400).json({ error: "Invalid or expired OTP. Please try again." });
+    res.status(400).json({ error: "Invalid or expired OTP. Please request a new one." });
     return;
   }
 
-  await db
-    .update(otpTable)
-    .set({ used: true })
-    .where(eq(otpTable.id, validOtp[0].id));
+  await db.update(otpTable).set({ used: true }).where(eq(otpTable.id, validOtp[0].id));
 
   const users = await db
     .select()
@@ -104,17 +108,15 @@ router.post("/auth/verify-otp", async (req, res): Promise<void> => {
   }
 
   const user = users[0];
-
   let clinic = null;
+
   if (user.clinicId) {
     const clinics = await db
       .select()
       .from(clinicsTable)
       .where(eq(clinicsTable.id, user.clinicId))
       .limit(1);
-    if (clinics.length > 0) {
-      clinic = clinics[0];
-    }
+    if (clinics.length > 0) clinic = clinics[0];
   }
 
   const roleRedirectMap: Record<string, string> = {
@@ -136,19 +138,21 @@ router.post("/auth/verify-otp", async (req, res): Promise<void> => {
       clinicId: user.clinicId ?? null,
       clinicCode: clinic?.clinicCode ?? null,
     },
-    clinic: clinic ? {
-      id: clinic.id,
-      clinicCode: clinic.clinicCode,
-      clinicName: clinic.clinicName,
-      clinicAddress: clinic.clinicAddress,
-      doctorName: clinic.doctorName,
-      doctorQualification: clinic.doctorQualification,
-      mobile: clinic.mobile,
-      email: clinic.email ?? null,
-      templateId: clinic.templateId ?? null,
-      logoUrl: clinic.logoUrl ?? null,
-      createdAt: clinic.createdAt.toISOString(),
-    } : null,
+    clinic: clinic
+      ? {
+          id: clinic.id,
+          clinicCode: clinic.clinicCode,
+          clinicName: clinic.clinicName,
+          clinicAddress: clinic.clinicAddress,
+          doctorName: clinic.doctorName,
+          doctorQualification: clinic.doctorQualification,
+          mobile: clinic.mobile,
+          email: clinic.email ?? null,
+          templateId: clinic.templateId ?? null,
+          logoUrl: clinic.logoUrl ?? null,
+          createdAt: clinic.createdAt.toISOString(),
+        }
+      : null,
     redirectTo,
   });
 });
