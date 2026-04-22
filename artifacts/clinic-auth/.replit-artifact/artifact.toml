@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Clinic Workflow - Auth & Setup"
+version = "1.0.0"
+id = "artifacts/clinic-auth"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18503
+
+[services.development]
+run = "pnpm --filter @workspace/clinic-auth run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/clinic-auth", "run", "build" ]
+publicDir = "artifacts/clinic-auth/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18503"
+BASE_PATH = "/"

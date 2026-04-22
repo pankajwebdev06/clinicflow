@@ -1,0 +1,213 @@
+## 1. 🔐 AUTH & CLINIC SETUP COMPONENT
+
+---
+
+### A). MAIN SCREEN (Entry Page)
+
+**UI Elements:**
+
+* Button 1: “Register Your Clinic”
+* Button 2: “Login”
+
+---
+
+### B). ACTION FLOW
+
+---
+
+### (a). If Click → “Register Your Clinic”
+
+#### Step 1: Open Clinic Registration Form
+
+**Input Fields:**
+
+* Clinic Name (Required)
+* Clinic Address (Required)
+* Doctor Name (Required)
+* Doctor Qualification (Required)
+* Mobile Number (Required, OTP verification)
+* Email ID (Optional)
+
+---
+
+#### Step 2: System Actions
+
+* Generate **Unique Clinic Code** (auto)
+
+  * Format example: MEHRA / SHARMA / random short code
+* Create Clinic Profile
+* Create First User:
+
+  * Role = Doctor (default admin)
+
+---
+
+#### Step 3: Branding Setup (Optional but Important)
+
+**Option 1: Upload Custom Prescription Layout**
+
+* Upload PDF / Image
+* Store as clinic template
+
+**Option 2: Choose Predefined Template**
+
+* Show 10 pre-designed prescription layouts
+* Preview option available
+* Select one template
+
+---
+
+#### Step 4: Prescription Layout Logic
+
+Each prescription template must have:
+
+**Header:**
+
+* Clinic Name
+* Doctor Name
+* Qualification
+* Mobile Number
+
+**Body:**
+
+* Patient Details (auto-filled)
+* Large blank space (for handwritten medicines)
+
+**Footer:**
+
+* Clinic Address
+
+---
+
+#### Step 5: Save & Complete Registration
+
+* Save clinic data
+* Save template selection
+* Auto login doctor
+* Redirect to **Doctor Dashboard**
+
+---
+
+---
+
+### (b). If Click → “Login”
+
+#### Step 1: Show Login Input
+
+**Input Field:**
+
+* Mobile Number OR Email ID
+
+---
+
+#### Step 2: OTP Verification
+
+* Send OTP
+* Verify OTP
+
+---
+
+#### Step 3: System Logic
+
+**Check user in database:**
+
+---
+
+##### Case 1: User Found
+
+* Fetch user role:
+
+  * Doctor
+  * Receptionist
+  * Admin
+
+---
+
+##### Step 4: Auto Dashboard Routing
+
+* If Doctor → Open Doctor Dashboard
+* If Receptionist → Open Reception Dashboard
+* If Admin → Open Admin Panel
+
+---
+
+##### Case 2: User NOT Found
+
+* Show message:
+  “User not found. Please register your clinic or contact admin.”
+
+* Provide button:
+  → “Register Your Clinic”
+
+---
+
+---
+
+### C). ADDITIONAL ACTIONS (Post Login – Future Ready)
+
+* Add new staff (Receptionist)
+* Assign role
+* Edit clinic details
+* Change prescription template
+
+---
+
+---
+
+### D). VALIDATION RULES
+
+* Mobile Number:
+
+  * Must be 10 digits
+* OTP:
+
+  * Valid for limited time
+* Required fields:
+
+  * Cannot be empty
+
+---
+
+---
+
+### E). SYSTEM BEHAVIOR
+
+* Fast load (<2 seconds)
+* Mobile-friendly UI
+* Minimal steps (2–3 actions max)
+* Auto-save where possible
+
+---
+
+---
+
+### F). DATA STORAGE
+
+* Clinic data → Database
+* User data → Auth system
+* Templates → Storage (cloud/local)
+* Logo → Storage
+
+---
+
+---
+
+### G). EDGE CASE HANDLING
+
+* Duplicate mobile during registration → Show warning
+* OTP failed → Retry option
+* No internet → Show retry / offline message
+
+---
+
+---
+
+### 🎯 FINAL GOAL
+
+* Doctor can register clinic in <2 minutes
+* Login process in <30 seconds
+* No confusion, no training required
+
+---
+
+END OF COMPONENT

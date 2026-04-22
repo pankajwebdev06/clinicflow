@@ -3,13 +3,19 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Clinic Workflow Automation API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: clinic
+    description: Clinic management
+  - name: templates
+    description: Prescription template operations
 paths:
   /healthz:
     get:
@@ -24,6 +30,171 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/send-otp:
+    post:
+      operationId: sendOtp
+      tags: [auth]
+      summary: Send OTP to mobile number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendOtpRequest"
+      responses:
+        "200":
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendOtpResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Mobile number already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/verify-otp:
+    post:
+      operationId: verifyOtp
+      tags: [auth]
+      summary: Verify OTP and login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpRequest"
+      responses:
+        "200":
+          description: OTP verified, user logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid or expired OTP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clinic/register:
+    post:
+      operationId: registerClinic
+      tags: [clinic]
+      summary: Register a new clinic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterClinicRequest"
+      responses:
+        "201":
+          description: Clinic registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterClinicResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Mobile number already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clinic/{clinicId}:
+    get:
+      operationId: getClinic
+      tags: [clinic]
+      summary: Get clinic details
+      parameters:
+        - name: clinicId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Clinic details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Clinic"
+        "404":
+          description: Clinic not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clinic/{clinicId}/template:
+    patch:
+      operationId: updateClinicTemplate
+      tags: [clinic]
+      summary: Update clinic prescription template
+      parameters:
+        - name: clinicId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTemplateRequest"
+      responses:
+        "200":
+          description: Template updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Clinic"
+        "404":
+          description: Clinic not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /templates:
+    get:
+      operationId: listTemplates
+      tags: [templates]
+      summary: List all available prescription templates
+      responses:
+        "200":
+          description: List of templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PrescriptionTemplate"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +205,199 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SendOtpRequest:
+      type: object
+      properties:
+        mobile:
+          type: string
+        purpose:
+          type: string
+          enum: [login, register]
+      required:
+        - mobile
+        - purpose
+
+    SendOtpResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        expiresInSeconds:
+          type: integer
+      required:
+        - message
+        - expiresInSeconds
+
+    VerifyOtpRequest:
+      type: object
+      properties:
+        mobile:
+          type: string
+        otp:
+          type: string
+      required:
+        - mobile
+        - otp
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+        clinic:
+          $ref: "#/components/schemas/Clinic"
+        redirectTo:
+          type: string
+          enum: [doctor_dashboard, reception_dashboard, admin_panel]
+      required:
+        - token
+        - user
+        - redirectTo
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        mobile:
+          type: string
+        role:
+          type: string
+          enum: [doctor, receptionist, admin]
+        clinicId:
+          type: ["integer", "null"]
+        clinicCode:
+          type: ["string", "null"]
+      required:
+        - id
+        - name
+        - mobile
+        - role
+
+    Clinic:
+      type: object
+      properties:
+        id:
+          type: integer
+        clinicCode:
+          type: string
+        clinicName:
+          type: string
+        clinicAddress:
+          type: string
+        doctorName:
+          type: string
+        doctorQualification:
+          type: string
+        mobile:
+          type: string
+        email:
+          type: ["string", "null"]
+        templateId:
+          type: ["integer", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - clinicCode
+        - clinicName
+        - clinicAddress
+        - doctorName
+        - doctorQualification
+        - mobile
+        - createdAt
+
+    RegisterClinicRequest:
+      type: object
+      properties:
+        clinicName:
+          type: string
+        clinicAddress:
+          type: string
+        doctorName:
+          type: string
+        doctorQualification:
+          type: string
+        mobile:
+          type: string
+        email:
+          type: ["string", "null"]
+        templateId:
+          type: ["integer", "null"]
+        otp:
+          type: string
+      required:
+        - clinicName
+        - clinicAddress
+        - doctorName
+        - doctorQualification
+        - mobile
+        - otp
+
+    RegisterClinicResponse:
+      type: object
+      properties:
+        clinic:
+          $ref: "#/components/schemas/Clinic"
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+        clinicCode:
+          type: string
+      required:
+        - clinic
+        - user
+        - token
+        - clinicCode
+
+    UpdateTemplateRequest:
+      type: object
+      properties:
+        templateId:
+          type: integer
+      required:
+        - templateId
+
+    PrescriptionTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        previewColor:
+          type: string
+        headerStyle:
+          type: string
+        footerStyle:
+          type: string
+        bodyLayout:
+          type: string
+        isDefault:
+          type: boolean
+      required:
+        - id
+        - name
+        - description
+        - previewColor
+        - headerStyle
+        - footerStyle
+        - bodyLayout
+        - isDefault

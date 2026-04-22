@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "-HQQtaoMw5hEL3PArOhBe"
+uri = "file://artifacts/clinic-auth/public/hero-clinic.jpg"
+type = "image"
+title = "professional bright modern medical clinic interior waiting room clean white and teal space with plants"
