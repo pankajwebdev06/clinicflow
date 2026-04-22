@@ -185,7 +185,7 @@ router.post("/doctor/staff", requireAuth, async (req: AuthRequest, res) => {
 
   const { mobile, name, role } = req.body;
   if (!mobile || !role) return res.status(400).json({ error: "Mobile and role are required" });
-  if (!["receptionist", "admin"].includes(role)) return res.status(400).json({ error: "Role must be receptionist or admin" });
+  if (!["receptionist", "manager", "admin"].includes(role)) return res.status(400).json({ error: "Role must be receptionist, manager, or admin" });
   if (!/^\d{10}$/.test(mobile)) return res.status(400).json({ error: "Mobile must be 10 digits" });
 
   const [existing] = await db.select().from(usersTable).where(eq(usersTable.mobile, mobile)).limit(1);

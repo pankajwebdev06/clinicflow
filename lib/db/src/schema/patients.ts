@@ -32,6 +32,7 @@ export const visitsTable = pgTable("visits", {
   notes: text("notes"),
   consultationStart: timestamp("consultation_start"),
   consultationEnd: timestamp("consultation_end"),
+  prescriptionData: text("prescription_data"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

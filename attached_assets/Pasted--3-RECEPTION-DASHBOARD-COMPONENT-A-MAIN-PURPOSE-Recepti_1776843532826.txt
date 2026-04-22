@@ -1,0 +1,442 @@
+## 3. 🧑‍💼 RECEPTION DASHBOARD COMPONENT
+
+---
+
+### A). MAIN PURPOSE
+
+Reception Dashboard ka goal:
+
+* Patient entry fast banana
+* Queue manage karna
+* Doctor ko smooth flow dena
+* Data loss kabhi na ho
+
+---
+
+### B). DESIGN PRINCIPLE
+
+Receptionist ko feel hona chahiye:
+
+✅ “Sab kuch ek hi jagah ho raha hai”
+❌ “System complicated hai” — ye kabhi nahi hona chahiye
+
+---
+
+### C). DASHBOARD STRUCTURE
+
+Reception dashboard = 4 main screens
+
+1. Mobile Entry Screen (Search / Entry)
+2. Patient Form Screen
+3. Queue Management Screen
+4. Prescription Upload Screen
+
+---
+
+# 🔹 SCREEN 1 → MOBILE ENTRY SCREEN
+
+---
+
+### UI ELEMENTS
+
+* Input field: “Enter Mobile Number”
+* Search auto-trigger after 10 digits
+* Button: “Search / Continue”
+
+---
+
+### ACTION FLOW
+
+---
+
+#### Step 1: Receptionist enters mobile number
+
+---
+
+#### Step 2: System Check
+
+---
+
+### CASE A: Internet Available
+
+* API call → search patient in database
+
+---
+
+### CASE B: Internet NOT Available
+
+* Search in local cache (last stored patients)
+
+---
+
+---
+
+### RESULT HANDLING
+
+---
+
+#### CASE 1: Patient FOUND
+
+System shows:
+
+* Name
+* Age
+* Last visit date
+* Short summary
+
+---
+
+**Buttons:**
+
+* Continue (assign token)
+* Edit details (if needed)
+
+---
+
+---
+
+#### CASE 2: Patient NOT FOUND
+
+System auto redirects to:
+
+👉 Patient Registration Form
+
+---
+
+---
+
+# 🔹 SCREEN 2 → PATIENT FORM SCREEN
+
+---
+
+### INPUT FIELDS
+
+Required:
+
+* Name
+* Age
+* Symptoms
+* Mobile (auto-filled)
+
+Optional:
+
+* BP
+* Weight
+* Temperature
+
+---
+
+### BUTTON
+
+* “Register & Assign Token”
+
+---
+
+---
+
+### ACTION FLOW
+
+---
+
+#### Step 1: Receptionist fills details
+
+---
+
+#### Step 2: Click “Register & Assign Token”
+
+---
+
+### SYSTEM ACTIONS
+
+* Create new patient (if not exists)
+* Generate UPID
+* Create visit entry
+* Assign token (auto increment)
+* Add patient to queue (status = Waiting)
+
+---
+
+---
+
+### RESPONSE
+
+* Show confirmation:
+  “Token 5 assigned to Rahul”
+
+* Auto redirect to Queue Screen
+
+---
+
+---
+
+# 🔹 SCREEN 3 → QUEUE MANAGEMENT SCREEN
+
+---
+
+### UI ELEMENTS
+
+List of all patients:
+
+Each row shows:
+
+* Token Number
+* Patient Name
+* Status (Waiting / In Consultation / Done / Cancelled)
+
+---
+
+### ACTION BUTTONS PER PATIENT
+
+* Upload Prescription
+* Mark Done (backup option)
+* Cancel
+
+---
+
+---
+
+### LIVE BEHAVIOR
+
+---
+
+#### When Doctor presses NEXT:
+
+* First waiting patient → moves to consultation
+* UI updates automatically
+
+---
+
+#### When Doctor presses DONE:
+
+* Status changes to completed
+
+---
+
+#### When Doctor presses CANCEL:
+
+* Status changes to cancelled
+
+---
+
+---
+
+### OFFLINE BEHAVIOR
+
+* Queue updates locally
+* Sync when internet returns
+
+---
+
+---
+
+# 🔹 SCREEN 4 → PRESCRIPTION UPLOAD
+
+---
+
+### ACTION FLOW
+
+---
+
+#### Step 1: Click “Upload Prescription”
+
+---
+
+#### Step 2: Open Camera / File Picker
+
+---
+
+#### Step 3: Capture Image
+
+---
+
+#### Step 4: Preview Screen
+
+Options:
+
+* Retake
+* Confirm Upload
+
+---
+
+---
+
+### SYSTEM ACTIONS
+
+* Compress image (~500KB)
+* Save locally (if offline)
+* Upload to server (if online)
+* Attach to patient visit
+
+---
+
+---
+
+### RESPONSE
+
+* Show success message
+* Update visit record
+* Mark patient = Done
+
+---
+
+---
+
+# 🔄 SERVER DATA FLOW
+
+---
+
+## 📥 DATA RECEIVED FROM SERVER
+
+Reception dashboard receives:
+
+* Patient data (name, age, history)
+* Queue data (tokens, status)
+* Doctor actions (next, done, cancel)
+
+---
+
+---
+
+## 📤 DATA SENT TO SERVER
+
+Reception sends:
+
+* New patient data
+* Visit details
+* Token assignment
+* Prescription image
+* Status updates
+
+---
+
+---
+
+# 🔁 SYNC FLOW (ONLINE)
+
+---
+
+1. Reception sends request
+2. Server processes
+3. Updates database
+4. Broadcast update
+5. Doctor dashboard updated
+
+---
+
+---
+
+# 🔁 SYNC FLOW (OFFLINE)
+
+---
+
+1. Store all actions locally
+2. Queue pending operations
+3. When internet returns:
+
+   * Push all changes
+   * Fetch latest queue
+   * Resolve conflicts (last write wins)
+
+---
+
+---
+
+# ⚙️ PERFORMANCE OPTIMIZATION
+
+---
+
+### 1. Instant Search
+
+* Mobile search < 1 second
+
+---
+
+### 2. Preload Data
+
+* Load queue in advance
+
+---
+
+### 3. Local Cache
+
+* Store recent patients
+* Store queue locally
+
+---
+
+### 4. No Reload
+
+* Update only changed data
+
+---
+
+---
+
+# ⚠️ EDGE CASE HANDLING
+
+---
+
+### Duplicate Entry Risk
+
+* Show warning:
+  “Similar mobile found”
+
+---
+
+---
+
+### Wrong Entry
+
+* Allow edit before token assign
+
+---
+
+---
+
+### No Internet
+
+* Show:
+  “Offline Mode Active”
+* Continue operations
+
+---
+
+---
+
+### Sync Conflict
+
+* Apply latest update
+* Show notification if mismatch
+
+---
+
+---
+
+# 🎯 FINAL EXPERIENCE GOAL
+
+Receptionist workflow:
+
+Enter mobile
+System detects
+Assign token
+Manage queue
+Upload prescription
+
+---
+
+### TIME TARGET
+
+* New patient entry: < 60 seconds
+* Returning patient: < 30 seconds
+
+---
+
+---
+
+# 💎 CORE PRINCIPLE
+
+> “Reception ko kaam nahi, flow feel hona chahiye”
+
+---
+
+END OF COMPONENT

@@ -7,6 +7,7 @@ import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import DoctorDashboard from "@/pages/doctor";
+import ReceptionDashboard from "@/pages/reception";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/doctor" component={DoctorDashboard} />
+      <Route path="/reception" component={ReceptionDashboard} />
       <Route component={NotFound} />
     </Switch>
   );
