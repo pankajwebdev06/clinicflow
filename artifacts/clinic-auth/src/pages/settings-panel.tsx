@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   X, Building2, FileText, Users, ChevronRight, Check, Save, Plus, Trash2,
-  Loader2, UserCheck, ShieldCheck, Phone, Mail, AlertCircle,
+  Loader2, UserCheck, ShieldCheck, Phone, Mail, AlertCircle, BriefcaseBusiness,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ function apiCall<T>(path: string, token: string, options?: RequestInit): Promise
 
 const ROLE_OPTIONS = [
   { value: "receptionist", label: "Receptionist", description: "Manages patient queue & appointments", icon: UserCheck, color: "bg-blue-100 text-blue-700 border-blue-200" },
+  { value: "manager", label: "Manager", description: "Oversees daily operations & staff activity", icon: BriefcaseBusiness, color: "bg-orange-100 text-orange-700 border-orange-200" },
   { value: "admin", label: "Admin", description: "Full access to clinic settings & reports", icon: ShieldCheck, color: "bg-purple-100 text-purple-700 border-purple-200" },
 ];
 
@@ -246,7 +247,7 @@ function StaffTab({ token, clinicId }: { token: string; clinicId: number }) {
         <div className="text-center py-8">
           <Users className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
           <p className="text-sm font-medium text-muted-foreground">No staff added yet</p>
-          <p className="text-xs text-muted-foreground mt-1">Add reception staff or admins to your clinic</p>
+          <p className="text-xs text-muted-foreground mt-1">Add reception staff, managers, or admins to your clinic</p>
         </div>
       )}
 

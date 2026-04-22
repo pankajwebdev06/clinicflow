@@ -106,6 +106,7 @@ export default function Login() {
           let redirectPath = "/";
           if (data.redirectTo === "doctor_dashboard") redirectPath = "/doctor";
           else if (data.redirectTo === "reception_dashboard") redirectPath = "/reception";
+          else if (data.redirectTo === "manager_dashboard") redirectPath = "/manager";
           else if (data.redirectTo === "admin_panel") redirectPath = "/admin";
           toast({ title: "Welcome back", description: `Logged in as ${data.user.role}` });
           setTimeout(() => setLocation(redirectPath), 500);

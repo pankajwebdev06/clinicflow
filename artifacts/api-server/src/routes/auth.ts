@@ -122,6 +122,7 @@ router.post("/auth/verify-otp", async (req, res): Promise<void> => {
   const roleRedirectMap: Record<string, string> = {
     doctor: "doctor_dashboard",
     receptionist: "reception_dashboard",
+    manager: "manager_dashboard",
     admin: "admin_panel",
   };
 

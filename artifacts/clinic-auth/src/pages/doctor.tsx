@@ -253,6 +253,7 @@ export default function DoctorDashboard() {
   const [showCancel, setShowCancel] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showExpand, setShowExpand] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [actionLock, setActionLock] = useState(false);
   const prevPatientId = useRef<number | null>(null);
@@ -512,6 +513,7 @@ export default function DoctorDashboard() {
                           View History
                         </button>
                         <button
+                          onClick={() => setShowExpand(true)}
                           className="flex-1 flex items-center justify-center gap-1.5 bg-card border rounded-xl py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all active:scale-95"
                         >
                           <Maximize2 className="w-4 h-4" />
@@ -603,6 +605,114 @@ export default function DoctorDashboard() {
           onClose={() => setShowHistory(false)}
         />
       )}
+
+      {/* Expand Patient Modal */}
+      <Dialog open={showExpand} onOpenChange={setShowExpand}>
+        <DialogContent className="max-w-sm w-full p-0 overflow-hidden rounded-2xl gap-0">
+          <DialogHeader className="px-5 pt-5 pb-3 border-b bg-primary/5">
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <div className="w-8 h-8 bg-primary/15 rounded-xl flex items-center justify-center">
+                <User className="w-4 h-4 text-primary" />
+              </div>
+              {data?.current?.patient.name ?? "Patient Details"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+              Full consultation details for current patient
+            </DialogDescription>
+          </DialogHeader>
+          {data?.current && (
+            <div className="overflow-y-auto max-h-[70vh] px-5 py-4 space-y-4">
+              {/* Identity Row */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="font-mono text-[10px]">{data.current.patient.upid}</Badge>
+                {data.current.patient.age && (
+                  <span className="text-xs text-muted-foreground">{data.current.patient.age} yrs</span>
+                )}
+                <GenderBadge gender={data.current.patient.gender} />
+                <Badge variant="secondary" className="text-[10px]">Token #{data.current.visit.tokenNumber}</Badge>
+              </div>
+
+              {/* Contact */}
+              {data.current.patient.mobile && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/40 rounded-xl px-3 py-2.5">
+                  <Phone className="w-4 h-4 shrink-0" />
+                  <span className="font-medium">{data.current.patient.mobile}</span>
+                </div>
+              )}
+
+              {/* Chief Complaints */}
+              {data.current.visit.symptoms && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                  <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide mb-1.5">Chief Complaints</p>
+                  <p className="text-sm text-amber-900 font-medium leading-relaxed">{data.current.visit.symptoms}</p>
+                </div>
+              )}
+
+              {/* Vitals */}
+              {(data.current.visit.bp || data.current.visit.weight || data.current.visit.temperature) && (
+                <div>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Vitals</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <VitalChip icon={Activity} label="BP" value={data.current.visit.bp} />
+                    <VitalChip icon={Weight} label="Weight" value={data.current.visit.weight} />
+                    <VitalChip icon={Thermometer} label="Temp" value={data.current.visit.temperature} />
+                  </div>
+                </div>
+              )}
+
+              {/* Consultation Timer */}
+              <div className="flex items-center gap-2 bg-muted/50 rounded-xl px-3 py-2.5">
+                <Clock className="w-4 h-4 text-primary shrink-0" />
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Consultation Time</p>
+                  <p className="text-sm font-bold text-primary">{timer}</p>
+                </div>
+              </div>
+
+              {/* Visit History */}
+              {data.current.history.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    Visit History ({data.current.history.length})
+                  </p>
+                  <div className="space-y-2">
+                    {data.current.history.map((h, i) => (
+                      <div key={i} className="bg-card border rounded-xl p-3 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <CalendarDays className="w-3.5 h-3.5 text-primary" />
+                          <span className="text-xs font-semibold">{h.visitDate}</span>
+                          {i === 0 && <Badge variant="secondary" className="text-[9px] py-0">Last visit</Badge>}
+                        </div>
+                        {h.symptoms && (
+                          <p className="text-xs text-muted-foreground">
+                            <span className="font-medium text-foreground">Complaints:</span> {h.symptoms}
+                          </p>
+                        )}
+                        {h.notes && (
+                          <p className="text-xs text-muted-foreground">
+                            <span className="font-medium text-foreground">Notes:</span> {h.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {data.current.history.length === 0 && (
+                <div className="text-center py-4 text-muted-foreground text-xs bg-muted/30 rounded-xl">
+                  First visit — no previous history
+                </div>
+              )}
+            </div>
+          )}
+          <div className="px-5 py-3 border-t bg-muted/20">
+            <Button className="w-full" size="sm" onClick={() => setShowExpand(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Settings Panel */}
       <SettingsPanel
