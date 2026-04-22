@@ -47,11 +47,15 @@ router.post("/auth/send-otp", async (req, res): Promise<void> => {
     used: false,
   });
 
-  req.log.info({ mobile, purpose }, "OTP generated (dev mode - check logs)");
+  const channel = (req.body.channel as string) || "sms";
+  req.log.info({ mobile, purpose, channel }, "OTP generated");
   req.log.info({ otp }, "DEV OTP");
 
+  let channelLabel = channel === "whatsapp" ? "WhatsApp" : "SMS";
+
   res.json({
-    message: `OTP sent to ${mobile}. (Dev mode: ${otp})`,
+    message: `OTP sent to ${mobile} via ${channelLabel}. (Dev code: ${otp})`,
+    otp,
     expiresInSeconds: 300,
   });
 });
