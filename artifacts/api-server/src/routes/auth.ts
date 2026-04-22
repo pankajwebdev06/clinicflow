@@ -59,7 +59,7 @@ router.post("/auth/send-otp", async (req, res): Promise<void> => {
   res.json({
     message: deliverySuccess
       ? `OTP sent to ${mobile} via ${channelLabel}.`
-      : `OTP ready for ${mobile}. (Dev mode — no ${channelLabel} key configured)`,
+      : `OTP generated for ${mobile}. Delivery pending — check dev banner.`,
     otp,
     delivered: deliverySuccess,
     channel: channelLabel,
